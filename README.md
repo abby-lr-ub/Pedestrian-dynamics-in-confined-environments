@@ -96,7 +96,24 @@ track together with per-step kinematic metrics.
 `vonMises_fit.csv` / `vonMises_params.csv` (Fig. 2b), and `LevyFlight_*.csv`
 (Fig. 2c).
 
-## Run it
+## What the code does
+
+The notebook runs a single top-to-bottom pipeline in four stages:
+
+1. **Load and format** — reads the five raw GPS tracks, unifies their two
+   schemas and timestamp formats, and projects latitude/longitude to a local
+   metric frame (`x, y`).
+2. **Process** — splits each track into gap-free segments, removes speed
+   spikes, and derives per-step metrics (step length, speed, heading, turning
+   angle).
+3. **Analyse** — computes the three mobility descriptors: the time-lag–binned
+   MSD with short- and long-lag slopes; the turning-angle distribution with a
+   von Mises fit; and the flight-length tail, fitted to power-law, log-normal
+   and exponential laws and compared with a likelihood-ratio test.
+4. **Plot** — generates Fig. 1 (trajectories) and Fig. 2 (the three
+   descriptors), and optionally writes the derived data to `Data/processedData/`.
+
+### Run it
 
 It is neccessary to have the raw data in `Data/rawData/` for the notebook to run and the `Data` folder in the same folder as the notebook.
 
