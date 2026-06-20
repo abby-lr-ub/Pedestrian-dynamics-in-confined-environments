@@ -1,0 +1,24 @@
+# LaTeX source and auxiliary files
+# (we only publish the compiled Comment.pdf, not the LaTeX project)
+*.tex
+*.bib
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+content/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
