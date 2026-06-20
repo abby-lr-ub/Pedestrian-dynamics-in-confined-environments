@@ -18,7 +18,7 @@ directional persistence survives.
 - `Comment.pdf` — the written Comment.
 - `img/` — figures used in the Comment.
 - `Data/rawData/` — the five raw GPS tracks (one CSV per group).
-- `Data/processedData/` — outputs written by the notebook: cleaned/derived tracks (`DerivedDF/`) and the series plotted in each figure (`plotData/`).
+- `Data/processedData/` — outputs written by the notebook: derived tracks (`derivedDF/`) and the series plotted in each figure (`plotData/`).
 
 ## Data
 
@@ -61,27 +61,35 @@ for convenience.
 
 ```
 Data/processedData/
-├── DerivedDF/
-│   ├── formated/   *_formatted.csv   cleaned + projected tracks
-│   └── derived/    *_derived.csv     per-step kinematic metrics
-└── plotData/                         series behind each figure
+├── derivedDF/                     *_derived.csv   cleaned, projected tracks + per-step metrics
+└── plotData/                      series behind each figure
 ```
 
-**`formated/*_formatted.csv`** — `lat`, `lon` (deg), `ele` (m), `time` (UTC),
-and `x`, `y` (m), an equirectangular projection about each track's centroid.
+**`*_derived.csv`** — one file per group: the cleaned and projected
+track together with per-step kinematic metrics.
 
-**`derived/*_derived.csv`** — the columns above plus per-step metrics:
+| Column     | Units            | Description                                          |
+| ---------- | ---------------- | ---------------------------------------------------- |
+| `lat`      | degrees (WGS84)  | Latitude                                             |
+| `lon`      | degrees (WGS84)  | Longitude                                            |
+| `ele`      | m                | Elevation                                            |
+| `time`     | UTC              | Timestamp of the fix                                 |
+| `x`, `y`   | m                | Equirectangular projection about the track's centroid |
+| `dt`       | s                | Time gap to the previous fix                         |
+| `seg`      | –                | Segment id (increments after gaps > 120 s)           |
+| `step`     | m                | Distance to the previous fix                         |
+| `speed`    | m/s              | `step` / `dt` (spikes > 8 m/s removed)               |
+| `heading`  | rad              | Direction of travel, `atan2(Δy, Δx)`                 |
+| `turn`     | rad              | Turning angle between consecutive headings, (−π, π]  |
+| `cum_dist` | m                | Cumulative path length                               |
+| `elapsed`  | s                | Time since the first fix of the track                |
 
-| Column     | Units | Description                                          |
-| ---------- | ----- | ---------------------------------------------------- |
-| `dt`       | s     | Time gap to the previous fix                         |
-| `seg`      | –     | Segment id (increments after gaps > 120 s)           |
-| `step`     | m     | Distance to the previous fix                         |
-| `speed`    | m/s   | `step` / `dt` (spikes > 8 m/s removed)               |
-| `heading`  | rad   | Direction of travel, `atan2(Δy, Δx)`                 |
-| `turn`     | rad   | Turning angle between consecutive headings, (−π, π]  |
-| `cum_dist` | m     | Cumulative path length                               |
-| `elapsed`  | s     | Time since the first fix of the track                |
+> Note: these are **processed** tracks, not the neutral signal. `step` and
+> `speed` carry `NaN` where they were filtered out (gaps > 120 s, speed spikes
+> > 8 m/s), and the first fix of every segment has `NaN` step-based metrics by
+> construction. `x, y` are local to each track (origin at its own centroid), so
+> they are not directly comparable across groups — the notebook re-projects to a
+> common origin (`to_common_xy`) when overlaying tracks.
 
 **`plotData/`** — the exact series plotted in the Comment: `trajectories.csv`
 (Fig. 1), `MSD_curves.csv` / `MSD_fit.csv` (Fig. 2a), `vonMises_hist.csv` /
