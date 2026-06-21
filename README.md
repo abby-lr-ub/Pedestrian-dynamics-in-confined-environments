@@ -1,6 +1,6 @@
 # Pedestrian dynamics in confined environments
 
-GPS trajectories and analysis code from a small citizen-science mobility
+GPS trajectories and analysis code from a small mobility
 experiment in **Zona Universitària (Barcelona)**, carried out for the *Social
 Systems* course of the Master's in Physics of Complex Systems and Biophysics
 (University of Barcelona).
@@ -14,8 +14,8 @@ directional persistence survives.
 
 ## Contents
 
-- `Comment_code.ipynb` — full analysis (cleaning, MSD, turning angles, flight-length tail, figures).
-- `Comment.pdf` — the written Comment.
+- `Comment_code.ipynb` — full analysis (cleaning, processing, speed, MSD, turning angles, flight-length tail, figures).
+- `Comment.pdf` — the written Comment (Nature-like style).
 - `img/` — figures used in the Comment.
 - `Data/rawData/` — the five raw GPS tracks (one CSV per group).
 - `Data/processedData/` — outputs written by the notebook: derived tracks (`derivedDF/`) and the series plotted in each figure (`plotData/`).
@@ -24,11 +24,11 @@ directional persistence survives.
 
 ### Raw data (`Data/rawData/`)
 
-Five CSV files, one per student group, recorded on 2026-06-01 during ~1 h of
+Five CSV files, one per student group, recorded on 2026-06-01 (YYYY/MM/DD) during ~1 h of
 walking around Zona Universitària. Four files share a common four-column schema;
 one (`laura_parra_judit_gorgori.csv`) is an unedited GPX export with extra,
-mostly empty columns. The loader in the notebook harmonises all of them
-(renaming, parsing both time formats, and projecting to local metric `x, y`).
+mostly empty columns. The loader in the notebook unifies all of them
+(renaming, parsing both time formats and projecting to local metric `x, y`).
 
 Common schema (4 of the 5 files):
 
@@ -74,22 +74,23 @@ track together with per-step kinematic metrics.
 | `lon`      | degrees (WGS84)  | Longitude                                            |
 | `ele`      | m                | Elevation                                            |
 | `time`     | UTC              | Timestamp of the fix                                 |
-| `x`, `y`   | m                | Equirectangular projection about the track's centroid |
+| `x`, `y`   | m                | Equirectangular projection about the track's centroid|
 | `dt`       | s                | Time gap to the previous fix                         |
 | `seg`      | –                | Segment id (increments after gaps > 120 s)           |
 | `step`     | m                | Distance to the previous fix                         |
 | `speed`    | m/s              | `step` / `dt` (spikes > 8 m/s removed)               |
-| `heading`  | rad              | Direction of travel, `atan2(Δy, Δx)`                 |
+| `heading`  | rad              | Direction of travel                                  |
 | `turn`     | rad              | Turning angle between consecutive headings, (−π, π]  |
 | `cum_dist` | m                | Cumulative path length                               |
 | `elapsed`  | s                | Time since the first fix of the track                |
 
 > Note: these are **processed** tracks, not the neutral signal. `step` and
 > `speed` carry `NaN` where they were filtered out (gaps > 120 s, speed spikes
-> > 8 m/s), and the first fix of every segment has `NaN` step-based metrics by
+> of > 8 m/s), and the first fix of every segment has `NaN` step-based metrics by
 > construction. `x, y` are local to each track (origin at its own centroid), so
-> they are not directly comparable across groups — the notebook re-projects to a
-> common origin (`to_common_xy`) when overlaying tracks.
+> they are not directly comparable across groups, and serve only for the
+> per-track metric analysis (MSD, flights). The published Fig. 1 instead overlays
+> all tracks on a basemap, reprojected to UTM 31N (EPSG:25831).
 
 **`plotData/`** — the exact series plotted in the Comment: `trajectories.csv`
 (Fig. 1), `MSD_curves.csv` / `MSD_fit.csv` (Fig. 2a), `vonMises_hist.csv` /
@@ -101,27 +102,30 @@ track together with per-step kinematic metrics.
 The notebook runs a single top-to-bottom pipeline in four stages:
 
 1. **Load and format** — reads the five raw GPS tracks, unifies their two
-   schemas and timestamp formats, and projects latitude/longitude to a local
+   schemas and timestamp formats and projects latitude/longitude to a local
    metric frame (`x, y`).
 2. **Process** — splits each track into gap-free segments, removes speed
-   spikes, and derives per-step metrics (step length, speed, heading, turning
+   spikes and derives per-step metrics (step length, speed, heading, turning
    angle).
 3. **Analyse** — computes the three mobility descriptors: the time-lag–binned
    MSD with short- and long-lag slopes; the turning-angle distribution with a
    von Mises fit; and the flight-length tail, fitted to power-law, log-normal
    and exponential laws and compared with a likelihood-ratio test.
-4. **Plot** — generates Fig. 1 (trajectories) and Fig. 2 (the three
-   descriptors), and optionally writes the derived data to `Data/processedData/`.
+4. **Plot** — generates Fig. 1 (trajectories, overlaid on a basemap in UTM 31N)
+   and Fig. 2 (the three descriptors), and optionally writes the derived data to
+   `Data/processedData/`.
+
+
+For further details, see the notebook's markdown cells.
 
 ### Run it
 
-It is neccessary to have the raw data in `Data/rawData/` for the notebook to run and the `Data` folder in the same folder as the notebook.
+It is necessary to have the raw data in `Data/rawData/` for the notebook to run and the `Data` folder in the same folder as the notebook.
 
-In order to run the notebook, you will need to install the following Python packages: `numpy`, `pandas`, `matplotlib`, `scipy`. It can be done in the following way:
+In order to run the notebook, you will need to install the following Python packages: `numpy`, `pandas`, `matplotlib`, `scipy`, `contextily` and `pyproj`. Python version: 3.12.12
 
-```bash
-pip install numpy pandas matplotlib scipy
-```
+> `contextily` and `pyproj` are only needed for the basemap in Fig. 1, and
+> `contextily` downloads map tiles, so it requires an internet connection.
 
 Run the cells top to bottom; figures are saved into `img/`, which will be created automatically if it does not exist. 
 
@@ -129,16 +133,21 @@ Run the cells top to bottom; figures are saved into `img/`, which will be create
 
 ## Cite
 
-> López Rivas, A. (2026). *Pedestrian dynamics in confined environments: GPS
-> trajectories and analysis from a citizen-science experiment in Zona
-> Universitària (Barcelona)* [Data set and code]. GitHub.
+> Master's students of the Social Systems course (data); López Rivas, A. (code
+> and analysis) (2026). *Pedestrian dynamics in confined environments (Zona
+> Universitària, Barcelona)*. GitHub.
 > https://github.com/abby-lr-ub/Pedestrian-dynamics-in-confined-environments
 
 ## License
 
-Code: MIT (see `LICENSE`). Data in `Data/`: CC BY 4.0.
+- Code: MIT (see `LICENSE`). 
+- Data in `Data/`: CC BY 4.0.
 
-## Author
+## Authors
 
 Alba López Rivas — University of Barcelona, 2026.
 Data collected by the five student groups of the *Social Systems* course.
+
+<alopezri201@alumnes.ub.edu>
+
+
